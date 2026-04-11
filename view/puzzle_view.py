@@ -4,9 +4,8 @@ class PuzzleView:
     def __init__(self, page: ft.Page, controller):
         self.page = page
         self.controller = controller
-        self.controller.view = self # El controlador ahora conoce a su vista
-        
-        # Referencias a los botones para actualizarlos sin repintar todo
+        self.controller.view = self
+                
         self.buttons = {} 
         self.selected_btn = None
 
@@ -20,51 +19,46 @@ class PuzzleView:
         self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
         self.page.vertical_alignment = ft.MainAxisAlignment.CENTER
 
-    def on_click_cell(self, e):
-        # La vista solo extrae los datos y se los pasa al controlador
+    def on_click_cell(self, e):        
         row, col = e.control.data
         self.controller.handle_click_cell(row, col)
 
-    def update_selection(self, row, col):
-        """Método que el controlador llama para actualizar la UI"""
+    def view_update_selection(self, row, col):        
         new_btn = self.buttons[(row, col)]
-        
-        # Resetear el anterior
+                
         if self.selected_btn:
             self.selected_btn.style.bgcolor = {
                 ft.ControlState.DEFAULT: "blueGrey50",
                 ft.ControlState.HOVERED: "cyan500",
             }
             self.selected_btn.update()
-
-        # Marcar el nuevo
+        
         self.selected_btn = new_btn
         self.selected_btn.style.bgcolor = "amber300"
         self.selected_btn.update()
 
     def build_grid(self):
         grid = ft.Column(spacing=10, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
-        
-        # Accedemos a los datos a través del modelo del controlador
+                
         for r in range(self.controller.model.rows):
-            fila = ft.Row(spacing=10, alignment=ft.MainAxisAlignment.CENTER)
+            row = ft.Row(spacing=10, alignment=ft.MainAxisAlignment.CENTER)
             for c in range(self.controller.model.columns):
-                celda = self.controller.model.structure[r][c]
-                es_vacio = celda.value is None
+                cell = self.controller.model.structure[r][c]
+                is_empty = cell.value is None
                 
                 btn = ft.Button(
-                    content=ft.Text(str(celda.value) if not es_vacio else "X", size=20),
+                    content=ft.Text(str(cell.value) if not is_empty else "X", size=20),
                     width=80, height=80,
                     data=(r, c),
                     on_click=self.on_click_cell,
                     style=ft.ButtonStyle(
-                        bgcolor="cyan700" if es_vacio else "blueGrey50",
+                        bgcolor="cyan700" if is_empty else "blueGrey50",
                         shape=ft.RoundedRectangleBorder(radius=10),
                     )
                 )
-                self.buttons[(r, c)] = btn # Guardamos referencia
-                fila.controls.append(btn)
-            grid.controls.append(fila)
+                self.buttons[(r, c)] = btn
+                row.controls.append(btn)
+            grid.controls.append(row)
         return grid
 
     def render(self):
