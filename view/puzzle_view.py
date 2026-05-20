@@ -1,4 +1,5 @@
 import flet as ft
+from view import constants as const
 
 class PuzzleView:
     def __init__(self, page: ft.Page, controller):
@@ -7,8 +8,7 @@ class PuzzleView:
         self.controller.view = self
                 
         self.buttons = {} 
-        self.selected_btn = None
-
+        self.selected_btn = None                
         self.config_view()
         self.render()
 
@@ -23,20 +23,25 @@ class PuzzleView:
         row, col = e.control.data
         self.controller.handle_click_cell(row, col)
 
-    def view_update_selection(self, row, col):        
-        new_btn = self.buttons[(row, col)]
+    def view_boton_selected(self, row, col):        
+        new_selected_btn = self.buttons[(row, col)]
                 
         if self.selected_btn:
-            self.selected_btn.style.bgcolor = {
-                ft.ControlState.DEFAULT: "blueGrey50",
-                ft.ControlState.HOVERED: "cyan500",
-            }
-            self.selected_btn.update()
-        
-        self.selected_btn = new_btn
-        self.selected_btn.style.bgcolor = "amber300"
-        self.selected_btn.update()
+            self.selected_btn.style.bgcolor = const.AVAILABLE_MOVEMENT
+            self.selected_btn.update()  
+            if self.selected_btn.data == (row, col):                
+                self.selected_btn = None
+                return                                                                    
+        self.selected_btn = new_selected_btn
+        self.selected_btn.style.bgcolor = const.SELECTED
+        self.selected_btn.update()    
 
+    def view_selection_movements(self, movements: list[tuple[int, int]]):        
+        for tuple in movements:            
+            btn = self.buttons[tuple]
+            btn.style.bgcolor = const.AVAILABLE_MOVEMENT   
+            btn.update()         
+        
     def build_grid(self):
         grid = ft.Column(spacing=10, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
                 
@@ -67,3 +72,4 @@ class PuzzleView:
             ft.Text("Puzzle de Números", size=32, weight=ft.FontWeight.BOLD),
             self.build_grid()
         )
+        self.controller.update_selection_movements()

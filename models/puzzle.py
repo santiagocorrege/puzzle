@@ -1,6 +1,7 @@
 from typing import Any
 from pydantic import BaseModel
 from models.cell import Cell
+from models.events.select_events import EventSelectCell 
 import random
 
 class Puzzle(BaseModel):
@@ -30,12 +31,24 @@ class Puzzle(BaseModel):
                 numbers[i * self.columns : (i + 1) * self.columns]
                 for i in range(self.rows)
             ]
+        self.update_available_movements()
 
-    def select_cell(self, cell: Cell) -> None:        
-        self.selected_cell = cell        
-        self.available_movements = self.get_available_movements()
+    def select_cell(self, row: int, col: int) -> tuple[EventSelectCell, list[tuple[int, int]]] | None:
+        if self.structure is not None:                
+            if((row, col) in self.available_movements):
+                new_selected_cell = self.structure[row][col]
+                if self.selected_cell == new_selected_cell:
+                    self.swap_cells(new_selected_cell)
+                    return (EventSelectCell.SWAPPED_CELLS, [()])                                           
+                else:
+                    self.selected_cell = new_selected_cell                                                             
+        return None        
+         
+    def swap_cells(self, new_selected_cell: Cell):        
+        if self.selected_cell:
+            self.selected_cell.value, new_selected_cell.value = new_selected_cell.value, self.selected_cell.value                    
 
-    def get_available_movements(self) -> list[tuple[int, int]]:
+    def update_available_movements(self):
         lst_movements: list[tuple[int, int]] = []
                 
         if self.empty_cell is not None:
@@ -50,4 +63,7 @@ class Puzzle(BaseModel):
             if row < self.rows - 1:
                 lst_movements.append((row + 1, column))
         
-        return lst_movements
+        self.available_movements = lst_movements
+        
+    def get_available_movements(self):
+        return self.available_movements
